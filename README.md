@@ -11,7 +11,7 @@ Pay My Buddy est une application web permettant aux utilisateurs de transférer 
 - Affichage du solde utilisateur
 
 ## Technologies utilisées
-- **Backend** : Java 21, Spring Boot 3
+- **Backend** : Java 17, Spring Boot 3
 - **Base de données** : MySQL
 - **Frontend** : Thymeleaf, HTML5, CSS3
 - **Tests** : JUnit, Mockito
@@ -28,15 +28,21 @@ Pay My Buddy est une application web permettant aux utilisateurs de transférer 
    ```sql
    CREATE DATABASE paymybuddy CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
    ```
-4. Accédez à la base de données nouvellement créée :
+4. Créez un user :
+   ```sql
+   CREATE USER 'payuser'@'localhost' IDENTIFIED BY 'motdepassetresfort';
+   GRANT ALL PRIVILEGES ON paymybuddy.* TO 'payuser'@'localhost';
+   FLUSH PRIVILEGES;
+   ```
+5. Accédez à la base de données nouvellement créée :
    ```sql
    USE paymybuddy;
    ```
-5. Importez le script SQL situé dans `src/main/resources/script.sql` :
+6. Importez le script SQL situé dans `src/main/resources/script.sql` :
    ```sql
    SOURCE src/main/resources/script.sql;
    ```
-6. Configuration des identifiants dans `.env` :
+7. Configuration des identifiants dans `.env` :
    Créez votre fichier `.env` à la racine de votre projet pour correspondre à vos identifiants MySQL :
    ```env
    DB_URL=jdbc:mysql://localhost:3306/paymybuddy?useSSL=false&serverTimezone=UTC

@@ -32,10 +32,6 @@ build/
 ### VS Code ###
 .vscode/
 
-src/main/java/com/openclassroom/paymybuddy/model/Transaction.java
-src/main/java/com/openclassroom/paymybuddy/model/User.java
-src/main/java/com/openclassroom/paymybuddy/model/UserConnection.java
-src/main/java/com/openclassroom/paymybuddy/model/UserConnectionId.java
 *.txt
 *.py
 *.env

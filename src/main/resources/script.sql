@@ -28,7 +28,6 @@ CREATE TABLE transaction (
                              FOREIGN KEY (receiver_id) REFERENCES app_user(id)
 );
 
--- Insertion de 10 utilisateurs
 INSERT INTO app_user (username, email, password) VALUES
                                                      ('alice', 'alice@mail.com', '$2a$10$xJwL5vxZJhNpDLwFpQhQ.eGYM3U9Q6QZ7Jz8cBQd6w7tq1JkXvYbG'), -- Motdepasse1
                                                      ('bob', 'bob@mail.com', '$2a$10$yHpKjwTmZRkOqN7NGQxR.e3z3Q1WQZ7Jz8cBQd6w7tq1JkXvYbG'),     -- Motdepasse2
@@ -41,7 +40,6 @@ INSERT INTO app_user (username, email, password) VALUES
                                                      ('isabel', 'isabel@mail.com', '$2a$10$rYqCkjwTmZRkOqN7NGQxR.e3z3Q1WQZ7Jz8cBQd6w7tq1JkXvYbG'),
                                                      ('jack', 'jack@mail.com', '$2a$10$qXpBkjwTmZRkOqN7NGQxR.e3z3Q1WQZ7Jz8cBQd6w7tq1JkXvYbG');
 
--- Connexions entre utilisateurs (réseau social)
 INSERT INTO user_connections (user_id, connection_id) VALUES
                                                           (1, 2), (1, 3), (1, 4), -- Alice est amie avec Bob, Charlie et Diana
                                                           (2, 3), (2, 5),         -- Bob est amie avec Charlie et Eve
@@ -53,7 +51,6 @@ INSERT INTO user_connections (user_id, connection_id) VALUES
                                                           (8, 10),                 -- Henry est amie avec Jack
                                                           (9, 10);                 -- Isabel est amie avec Jack
 
--- Transactions entre utilisateurs
 INSERT INTO transaction (sender_id, receiver_id, description, amount, created_at) VALUES
                                                                                       (1, 2, 'Déjeuner', 15.50, '2023-01-15 12:30:00'),
                                                                                       (2, 1, 'Remboursement', 7.75, '2023-01-16 09:15:00'),

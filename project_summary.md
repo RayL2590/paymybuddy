@@ -19,7 +19,7 @@ Créer un prototype d'application web permettant aux utilisateurs d'envoyer et r
 ### Partie 2 - Application Web
 #### Back-end
 - [ ] Implémenter la couche DAL (Data Access Layer)
-- [ ] Utiliser Spring Boot 3 + Java 21
+- [ ] Utiliser Spring Boot 3 + Java 17
 - [ ] Connexion sécurisée à la BDD (identifiants dans un fichier `.env` ou `application.properties`)
 - [ ] Gérer les transactions (commit/rollback)
 - [ ] Implémenter :
@@ -27,7 +27,6 @@ Créer un prototype d'application web permettant aux utilisateurs d'envoyer et r
   - Connexion
   - Ajout d'amis par email
   - Paiement entre utilisateurs
-  - Calcul de la commission (0,5%)
 - [ ] Prévoir une structure évolutive (ajout futur de facturation, virements bancaires, etc.)
 
 #### Front-end
