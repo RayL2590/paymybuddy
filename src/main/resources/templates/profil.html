@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pay My Buddy - Profil</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/static/style.css}">
+</head>
+<body class="bg-light">
+<div class="container-fluid">
+    <!-- Header -->
+    <header class="bg-white border-bottom mb-4">
+        <div class="container">
+            <nav class="navbar navbar-expand-lg navbar-light py-3">
+                <div class="navbar-brand">
+                    <h1 class="h4 mb-0 fw-semibold text-dark">Pay My Buddy</h1>
+                </div>
+
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav ms-auto">
+                        <li class="nav-item">
+                            <a class="nav-link fw-medium text-secondary" th:href="@{/user-transactions/{userId}(userId=${user.id})}">Transférer</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link active fw-medium text-primary" th:href="@{/profil}">Profil</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link fw-medium text-secondary" th:href="@{/user-relations/add}">Ajouter relation</a>
+                        </li>
+                        <li class="nav-item">
+                            <form th:action="@{/logout}" method="post" style="display: inline;">
+                                <button type="submit" class="nav-link fw-medium text-secondary bg-transparent border-0" style="cursor: pointer;">
+                                    <i class="fas fa-sign-out-alt me-1"></i>Se déconnecter
+                                </button>
+                            </form>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="container">
+        <!-- Messages de succès/erreur -->
+        <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i>
+            <span th:text="${successMessage}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        
+        <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle me-2"></i>
+            <span th:text="${errorMessage}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <div class="row justify-content-center">
+            <div class="col-lg-8 col-xl-6">
+                <h2 class="mb-4 fw-semibold text-dark">Mon Profil</h2>
+
+                <!-- Informations du profil -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-body p-4">
+                        <h5 class="card-title fw-semibold mb-4">
+                            <i class="fas fa-user me-2 text-primary"></i>Informations personnelles
+                        </h5>
+                        
+                        <div class="row mb-3">
+                            <div class="col-sm-4">
+                                <strong>Nom d'utilisateur:</strong>
+                            </div>
+                            <div class="col-sm-8">
+                                <span th:text="${user.username}" class="text-muted"></span>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-sm-4">
+                                <strong>Adresse email:</strong>
+                            </div>
+                            <div class="col-sm-8">
+                                <span th:text="${user.email}" class="text-muted"></span>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-sm-4">
+                                <strong>Mot de passe:</strong>
+                            </div>
+                            <div class="col-sm-8">
+                                <span class="text-muted">••••••••••••</span>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-sm-4">
+                                <strong>Balance:</strong>
+                            </div>
+                            <div class="col-sm-8">
+                                <span class="text-success fw-bold" th:text="${#numbers.formatDecimal(user.balance, 1, 2)} + '€'"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modification du mot de passe -->
+                <div class="card shadow-sm">
+                    <div class="card-body p-4">
+                        <h5 class="card-title fw-semibold mb-4">
+                            <i class="fas fa-lock me-2 text-warning"></i>Modifier le mot de passe
+                        </h5>
+                        
+                        <form th:action="@{/profil/change-password}" method="post" id="passwordForm">
+                            <div class="mb-3">
+                                <label for="currentPassword" class="form-label">Mot de passe actuel</label>
+                                <div class="input-group">
+                                    <input type="password" 
+                                           class="form-control" 
+                                           id="currentPassword" 
+                                           name="currentPassword" 
+                                           required>
+                                    <button class="btn btn-outline-secondary" type="button" id="toggleCurrentPassword">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="newPassword" class="form-label">Nouveau mot de passe</label>
+                                <div class="input-group">
+                                    <input type="password" 
+                                           class="form-control" 
+                                           id="newPassword" 
+                                           name="newPassword" 
+                                           required>
+                                    <button class="btn btn-outline-secondary" type="button" id="toggleNewPassword">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                                <div class="form-text">
+                                    Le mot de passe doit contenir au moins 8 caractères, incluant des lettres et des chiffres.
+                                </div>
+                                <div id="passwordStrength" class="mt-2"></div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="confirmPassword" class="form-label">Confirmer le nouveau mot de passe</label>
+                                <div class="input-group">
+                                    <input type="password" 
+                                           class="form-control" 
+                                           id="confirmPassword" 
+                                           name="confirmPassword" 
+                                           required>
+                                    <button class="btn btn-outline-secondary" type="button" id="toggleConfirmPassword">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                                <div id="passwordMatch" class="form-text"></div>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary" id="submitButton" disabled>
+                                <i class="fas fa-save me-2"></i>Modifier le mot de passe
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const currentPasswordInput = document.getElementById('currentPassword');
+    const newPasswordInput = document.getElementById('newPassword');
+    const confirmPasswordInput = document.getElementById('confirmPassword');
+    const passwordStrengthDiv = document.getElementById('passwordStrength');
+    const passwordMatchDiv = document.getElementById('passwordMatch');
+    const submitButton = document.getElementById('submitButton');
+    const passwordForm = document.getElementById('passwordForm');
+    
+    // Fonction pour basculer la visibilité du mot de passe
+    function togglePasswordVisibility(inputId, buttonId) {
+        const input = document.getElementById(inputId);
+        const button = document.getElementById(buttonId);
+        const icon = button.querySelector('i');
+        
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        } else {
+            input.type = 'password';
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+        }
+    }
+    
+    // Ajouter les écouteurs pour basculer la visibilité
+    document.getElementById('toggleCurrentPassword').addEventListener('click', function() {
+        togglePasswordVisibility('currentPassword', 'toggleCurrentPassword');
+    });
+    
+    document.getElementById('toggleNewPassword').addEventListener('click', function() {
+        togglePasswordVisibility('newPassword', 'toggleNewPassword');
+    });
+    
+    document.getElementById('toggleConfirmPassword').addEventListener('click', function() {
+        togglePasswordVisibility('confirmPassword', 'toggleConfirmPassword');
+    });
+    
+    // Fonction pour vérifier la force du mot de passe
+    function checkPasswordStrength(password) {
+        const minLength = 8;
+        const hasLetters = /[a-zA-Z]/.test(password);
+        const hasNumbers = /\d/.test(password);
+        const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+        
+        let strength = 0;
+        let message = '';
+        let className = '';
+        
+        if (password.length >= minLength) strength++;
+        if (hasLetters) strength++;
+        if (hasNumbers) strength++;
+        if (hasSpecial) strength++;
+        
+        if (password.length === 0) {
+            message = '';
+            className = '';
+        } else if (password.length < minLength) {
+            message = '❌ Trop court (minimum 8 caractères)';
+            className = 'text-danger';
+        } else if (!hasLetters || !hasNumbers) {
+            message = '❌ Doit contenir des lettres ET des chiffres';
+            className = 'text-danger';
+        } else if (strength === 2) {
+            message = '⚠️ Faible (ajoutez des caractères spéciaux)';
+            className = 'text-warning';
+        } else if (strength === 3) {
+            message = '✅ Moyen';
+            className = 'text-info';
+        } else {
+            message = '✅ Fort';
+            className = 'text-success';
+        }
+        
+        return { valid: password.length >= minLength && hasLetters && hasNumbers, message, className };
+    }
+    
+    // Fonction pour vérifier si les mots de passe correspondent
+    function checkPasswordMatch(password, confirm) {
+        if (confirm.length === 0) {
+            return { match: false, message: '', className: '' };
+        }
+        
+        if (password === confirm) {
+            return { match: true, message: '✅ Les mots de passe correspondent', className: 'text-success' };
+        } else {
+            return { match: false, message: '❌ Les mots de passe ne correspondent pas', className: 'text-danger' };
+        }
+    }
+    
+    // Fonction pour mettre à jour l'état du bouton
+    function updateSubmitButton() {
+        const currentPassword = currentPasswordInput.value;
+        const newPassword = newPasswordInput.value;
+        const confirmPassword = confirmPasswordInput.value;
+        
+        const passwordStrength = checkPasswordStrength(newPassword);
+        const passwordMatch = checkPasswordMatch(newPassword, confirmPassword);
+        
+        const isValid = currentPassword.length > 0 && 
+                       passwordStrength.valid && 
+                       passwordMatch.match;
+        
+        submitButton.disabled = !isValid;
+    }
+    
+    // Écouteurs pour la validation en temps réel
+    newPasswordInput.addEventListener('input', function() {
+        const strength = checkPasswordStrength(this.value);
+        passwordStrengthDiv.textContent = strength.message;
+        passwordStrengthDiv.className = strength.className;
+        
+        // Vérifier aussi la correspondance si confirmPassword n'est pas vide
+        if (confirmPasswordInput.value.length > 0) {
+            const match = checkPasswordMatch(this.value, confirmPasswordInput.value);
+            passwordMatchDiv.textContent = match.message;
+            passwordMatchDiv.className = match.className;
+        }
+        
+        updateSubmitButton();
+    });
+    
+    confirmPasswordInput.addEventListener('input', function() {
+        const match = checkPasswordMatch(newPasswordInput.value, this.value);
+        passwordMatchDiv.textContent = match.message;
+        passwordMatchDiv.className = match.className;
+        
+        updateSubmitButton();
+    });
+    
+    currentPasswordInput.addEventListener('input', updateSubmitButton);
+    
+    // Validation avant soumission
+    passwordForm.addEventListener('submit', function(e) {
+        const newPassword = newPasswordInput.value;
+        const confirmPassword = confirmPasswordInput.value;
+        
+        const strength = checkPasswordStrength(newPassword);
+        const match = checkPasswordMatch(newPassword, confirmPassword);
+        
+        if (!strength.valid) {
+            e.preventDefault();
+            alert('Le mot de passe doit contenir au moins 8 caractères, incluant des lettres et des chiffres.');
+            return;
+        }
+        
+        if (!match.match) {
+            e.preventDefault();
+            alert('Les mots de passe ne correspondent pas.');
+            return;
+        }
+        
+        // Confirmation finale
+        if (!confirm('Êtes-vous sûr de vouloir modifier votre mot de passe ?')) {
+            e.preventDefault();
+        }
+    });
+    
+    // Auto-dismiss des alertes après 5 secondes
+    const alerts = document.querySelectorAll('.alert');
+    alerts.forEach(alert => {
+        setTimeout(() => {
+            if (alert.classList.contains('show')) {
+                alert.classList.remove('show');
+                setTimeout(() => alert.remove(), 150);
+            }
+        }, 5000);
+    });
+});
+</script>
+</body>
+</html>

@@ -6,7 +6,8 @@
     <meta name="description" content>
     <title>Pay My Buddy - Transactions Utilisateur</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/static/style.css}">
 </head>
 <body class="bg-light">
 <div class="container-fluid">
@@ -25,16 +26,20 @@
                 <div class="collapse navbar-collapse" id="navbarNav">
                     <ul class="navbar-nav ms-auto">
                         <li class="nav-item">
-                            <a class="nav-link active fw-medium text-primary" th:href="@{/user-transactions/1}">Transférer</a>
+                            <a class="nav-link active fw-medium text-primary" th:href="@{/user-transactions/{userId}(userId=${user.id})}">Transférer</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link fw-medium text-secondary" href="#">Profil</a>
+                            <a class="nav-link fw-medium text-secondary" th:href="@{/profil}">Profil</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link fw-medium text-secondary" th:href="@{/user-relations/add}">Ajouter relation</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link fw-medium text-secondary" href="#">Se déconnecter</a>
+                            <form th:action="@{/logout}" method="post" style="display: inline;">
+                                <button type="submit" class="nav-link fw-medium text-secondary bg-transparent border-0" style="cursor: pointer;">
+                                    <i class="fas fa-sign-out-alt me-1"></i>Se déconnecter
+                                </button>
+                            </form>
                         </li>
                     </ul>
                 </div>
@@ -44,8 +49,76 @@
 
     <!-- Main Content -->
     <div class="container">
+        <!-- Messages de succès/erreur -->
+        <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i>
+            <span th:text="${successMessage}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        
+        <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle me-2"></i>
+            <span th:text="${errorMessage}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        
         <div class="row justify-content-center">
             <div class="col-lg-10 col-xl-8">
+                
+                <!-- Section Balance -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-body p-4">
+                        <div class="row align-items-center">
+                            <div class="col-md-4">
+                                <h3 class="h5 fw-semibold text-dark mb-2">Ma Balance</h3>
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-wallet text-success me-2"></i>
+                                    <span class="h4 fw-bold text-success mb-0" th:text="${#numbers.formatDecimal(user.balance, 1, 2)} + '€'"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-8">
+                                <div class="row g-2">
+                                    <div class="col-md-6">
+                                        <form th:action="@{/user-transactions/{userId}/balance/add(userId=${user.id})}" method="post" class="d-flex gap-2">
+                                            <input type="number" 
+                                                   class="form-control" 
+                                                   name="amount" 
+                                                   placeholder="Montant à ajouter" 
+                                                   min="0.01" 
+                                                   step="0.01" 
+                                                   max="10000"
+                                                   required>
+                                            <button type="submit" class="btn btn-success btn-sm">
+                                                <i class="fas fa-plus me-1"></i>Ajouter
+                                            </button>
+                                        </form>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <form th:action="@{/user-transactions/{userId}/balance/subtract(userId=${user.id})}" method="post" class="d-flex gap-2">
+                                            <input type="number" 
+                                                   class="form-control" 
+                                                   name="amount" 
+                                                   placeholder="Montant à retirer" 
+                                                   min="0.01" 
+                                                   step="0.01" 
+                                                   max="10000"
+                                                   required>
+                                            <button type="submit" class="btn btn-warning btn-sm">
+                                                <i class="fas fa-minus me-1"></i>Retirer
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                                <div class="mt-2">
+                                    <small class="text-muted">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        Balance limitée entre 0€ et 10 000€
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 <!-- Transfer Form -->
                 <div class="card shadow-sm mb-4">
                     <form id="transferForm" class="card-body p-4" th:action="@{/user-transactions/{userId}/transfer(userId=${user.id})}" method="post">
@@ -142,5 +215,62 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Gestion des formulaires de balance
+    const balanceForms = document.querySelectorAll('form[action*="/balance/"]');
+    const currentBalance = parseFloat(document.querySelector('.text-success').textContent.replace('€', ''));
+    
+    balanceForms.forEach(form => {
+        form.addEventListener('submit', function(e) {
+            const amountInput = this.querySelector('input[name="amount"]');
+            const amount = parseFloat(amountInput.value);
+            const isAdd = this.action.includes('/add');
+            
+            if (isNaN(amount) || amount <= 0) {
+                e.preventDefault();
+                alert('Veuillez saisir un montant valide');
+                return;
+            }
+            
+            if (isAdd) {
+                // Vérification pour l'ajout
+                if (currentBalance + amount > 10000) {
+                    e.preventDefault();
+                    alert('Le montant total ne peut pas dépasser 10 000€');
+                    return;
+                }
+            } else {
+                // Vérification pour le retrait
+                if (currentBalance - amount < 0) {
+                    e.preventDefault();
+                    alert('Vous ne pouvez pas retirer plus que votre balance actuelle');
+                    return;
+                }
+            }
+            
+            // Confirmation pour les gros montants
+            if (amount > 1000) {
+                const action = isAdd ? 'ajouter' : 'retirer';
+                if (!confirm(`Êtes-vous sûr de vouloir ${action} ${amount}€ ?`)) {
+                    e.preventDefault();
+                    return;
+                }
+            }
+        });
+    });
+    
+    // Auto-dismiss des alertes après 5 secondes
+    const alerts = document.querySelectorAll('.alert');
+    alerts.forEach(alert => {
+        setTimeout(() => {
+            if (alert.classList.contains('show')) {
+                alert.classList.remove('show');
+                setTimeout(() => alert.remove(), 150);
+            }
+        }, 5000);
+    });
+});
+</script>
 </body>
 </html>

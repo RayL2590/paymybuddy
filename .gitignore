@@ -35,3 +35,9 @@ build/
 *.txt
 *.py
 *.env
+user_connection.md
+FONCTIONNALITE_GESTION_BALANCE.md
+MODIFICATIONS_RECHERCHE_UTILISATEURS.md
+FONCTIONNALITE_PAGE_PROFIL.md
+postman_collection.json
+project_summary.md
