@@ -116,7 +116,7 @@ public class UserService {
         
         // Créer le nouvel utilisateur
         User newUser = User.builder()
-                .username(registerDTO.getUsername()) // Utilise getUsername() qui retourne firstName
+                .username(registerDTO.getUsername())
                 .email(registerDTO.getEmail())
                 .password(passwordEncoder.encode(registerDTO.getPassword()))
                 .balance(BigDecimal.ZERO)
@@ -287,5 +287,101 @@ public class UserService {
         userRepository.save(user);
         
         logger.info("Mot de passe modifié avec succès pour l'utilisateur ID: {}", userId);
+    }
+    
+    /**
+     * Vérifier si un nom d'utilisateur est disponible
+     *
+     * @param username Nom d'utilisateur à vérifier
+     * @param currentUserId ID de l'utilisateur actuel (pour exclure son propre nom)
+     * @return true si le nom d'utilisateur est disponible, false sinon
+     */
+    public boolean isUsernameAvailable(String username, Long currentUserId) {
+        logger.info("Vérification de disponibilité du nom d'utilisateur: {}", username);
+        
+        Optional<User> existingUser = userRepository.findByUsername(username);
+        
+        // Si aucun utilisateur n'a ce nom, il est disponible
+        if (existingUser.isEmpty()) {
+            return true;
+        }
+        
+        // Si l'utilisateur trouvé est l'utilisateur actuel, c'est ok
+        return existingUser.get().getId().equals(currentUserId);
+    }
+    
+    /**
+     * Modifier le nom d'utilisateur
+     *
+     * @param userId ID de l'utilisateur
+     * @param newUsername Nouveau nom d'utilisateur
+     * @throws IllegalArgumentException si le nom d'utilisateur est déjà pris
+     */
+    public void changeUsername(Long userId, String newUsername) {
+        logger.info("Tentative de modification du nom d'utilisateur - UserId: {}", userId);
+        
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("Utilisateur non trouvé"));
+        
+        // Vérifier si le nom d'utilisateur est disponible
+        if (!isUsernameAvailable(newUsername, userId)) {
+            throw new IllegalArgumentException("Ce nom d'utilisateur est déjà utilisé");
+        }
+        
+        String oldUsername = user.getUsername();
+        user.setUsername(newUsername);
+        
+        userRepository.save(user);
+        
+        logger.info("Nom d'utilisateur modifié avec succès pour l'utilisateur ID: {} - Ancien: {}, Nouveau: {}", 
+                   userId, oldUsername, newUsername);
+    }
+    
+    /**
+     * Vérifier si une adresse email est disponible
+     *
+     * @param email Adresse email à vérifier
+     * @param currentUserId ID de l'utilisateur actuel (pour exclure sa propre adresse)
+     * @return true si l'adresse email est disponible, false sinon
+     */
+    public boolean isEmailAvailable(String email, Long currentUserId) {
+        logger.info("Vérification de disponibilité de l'adresse email: {}", email);
+        
+        Optional<User> existingUser = userRepository.findByEmail(email);
+        
+        // Si aucun utilisateur n'a cette adresse, elle est disponible
+        if (existingUser.isEmpty()) {
+            return true;
+        }
+        
+        // Si l'utilisateur trouvé est l'utilisateur actuel, c'est ok
+        return existingUser.get().getId().equals(currentUserId);
+    }
+    
+    /**
+     * Modifier l'adresse email
+     *
+     * @param userId ID de l'utilisateur
+     * @param newEmail Nouvelle adresse email
+     * @throws IllegalArgumentException si l'adresse email est déjà utilisée
+     */
+    public void changeEmail(Long userId, String newEmail) {
+        logger.info("Tentative de modification de l'adresse email - UserId: {}", userId);
+        
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("Utilisateur non trouvé"));
+        
+        // Vérifier si l'adresse email est disponible
+        if (!isEmailAvailable(newEmail, userId)) {
+            throw new IllegalArgumentException("Cette adresse email est déjà utilisée");
+        }
+        
+        String oldEmail = user.getEmail();
+        user.setEmail(newEmail);
+        
+        userRepository.save(user);
+        
+        logger.info("Adresse email modifiée avec succès pour l'utilisateur ID: {} - Ancienne: {}, Nouvelle: {}", 
+                   userId, oldEmail, newEmail);
     }
 }

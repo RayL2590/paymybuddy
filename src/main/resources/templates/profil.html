@@ -110,6 +110,101 @@
                     </div>
                 </div>
 
+                <!-- Modification du nom d'utilisateur -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-body p-4">
+                        <h5 class="card-title fw-semibold mb-4">
+                            <i class="fas fa-user-edit me-2 text-info"></i>Modifier le nom d'utilisateur
+                        </h5>
+                        
+                        <form th:action="@{/profil/change-username}" method="post" id="usernameForm">
+                            <div class="mb-3">
+                                <label for="newUsername" class="form-label">Nouveau nom d'utilisateur</label>
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="newUsername" 
+                                       name="newUsername" 
+                                       th:placeholder="${user.username}"
+                                       required
+                                       maxlength="20"
+                                       minlength="3"
+                                       pattern="^[a-zA-Z0-9]+$">
+                                <div class="form-text">
+                                    Le nom d'utilisateur doit contenir entre 3 et 20 caractères alphanumériques (lettres et chiffres uniquement).
+                                </div>
+                                <div id="usernameAvailability" class="mt-2"></div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="currentPasswordForUsername" class="form-label">Mot de passe actuel</label>
+                                <div class="input-group">
+                                    <input type="password" 
+                                           class="form-control" 
+                                           id="currentPasswordForUsername" 
+                                           name="currentPassword" 
+                                           required>
+                                    <button class="btn btn-outline-secondary" type="button" id="toggleCurrentPasswordForUsername">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                                <div class="form-text">
+                                    Veuillez saisir votre mot de passe actuel pour confirmer cette modification.
+                                </div>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-info" id="usernameSubmitButton" disabled>
+                                <i class="fas fa-save me-2"></i>Modifier le nom d'utilisateur
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Modification de l'adresse email -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-body p-4">
+                        <h5 class="card-title fw-semibold mb-4">
+                            <i class="fas fa-envelope me-2 text-success"></i>Modifier l'adresse email
+                        </h5>
+                        
+                        <form th:action="@{/profil/change-email}" method="post" id="emailForm">
+                            <div class="mb-3">
+                                <label for="newEmail" class="form-label">Nouvelle adresse email</label>
+                                <input type="email" 
+                                       class="form-control" 
+                                       id="newEmail" 
+                                       name="newEmail" 
+                                       th:placeholder="${user.email}"
+                                       required>
+                                <div class="form-text">
+                                    L'adresse email doit avoir un format valide (exemple: utilisateur@domaine.com).
+                                </div>
+                                <div id="emailAvailability" class="mt-2"></div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="currentPasswordForEmail" class="form-label">Mot de passe actuel</label>
+                                <div class="input-group">
+                                    <input type="password" 
+                                           class="form-control" 
+                                           id="currentPasswordForEmail" 
+                                           name="currentPassword" 
+                                           required>
+                                    <button class="btn btn-outline-secondary" type="button" id="toggleCurrentPasswordForEmail">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                                <div class="form-text">
+                                    Veuillez saisir votre mot de passe actuel pour confirmer cette modification.
+                                </div>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-success" id="emailSubmitButton" disabled>
+                                <i class="fas fa-save me-2"></i>Modifier l'adresse email
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
                 <!-- Modification du mot de passe -->
                 <div class="card shadow-sm">
                     <div class="card-body p-4">
@@ -187,6 +282,20 @@ document.addEventListener('DOMContentLoaded', function() {
     const submitButton = document.getElementById('submitButton');
     const passwordForm = document.getElementById('passwordForm');
     
+    // Éléments pour la modification du nom d'utilisateur
+    const newUsernameInput = document.getElementById('newUsername');
+    const currentPasswordForUsernameInput = document.getElementById('currentPasswordForUsername');
+    const usernameAvailabilityDiv = document.getElementById('usernameAvailability');
+    const usernameSubmitButton = document.getElementById('usernameSubmitButton');
+    const usernameForm = document.getElementById('usernameForm');
+    
+    // Éléments pour la modification de l'adresse email
+    const newEmailInput = document.getElementById('newEmail');
+    const currentPasswordForEmailInput = document.getElementById('currentPasswordForEmail');
+    const emailAvailabilityDiv = document.getElementById('emailAvailability');
+    const emailSubmitButton = document.getElementById('emailSubmitButton');
+    const emailForm = document.getElementById('emailForm');
+    
     // Fonction pour basculer la visibilité du mot de passe
     function togglePasswordVisibility(inputId, buttonId) {
         const input = document.getElementById(inputId);
@@ -215,6 +324,14 @@ document.addEventListener('DOMContentLoaded', function() {
     
     document.getElementById('toggleConfirmPassword').addEventListener('click', function() {
         togglePasswordVisibility('confirmPassword', 'toggleConfirmPassword');
+    });
+    
+    document.getElementById('toggleCurrentPasswordForUsername').addEventListener('click', function() {
+        togglePasswordVisibility('currentPasswordForUsername', 'toggleCurrentPasswordForUsername');
+    });
+    
+    document.getElementById('toggleCurrentPasswordForEmail').addEventListener('click', function() {
+        togglePasswordVisibility('currentPasswordForEmail', 'toggleCurrentPasswordForEmail');
     });
     
     // Fonction pour vérifier la force du mot de passe
@@ -256,6 +373,66 @@ document.addEventListener('DOMContentLoaded', function() {
         return { valid: password.length >= minLength && hasLetters && hasNumbers, message, className };
     }
     
+    // Fonction pour vérifier la validité du nom d'utilisateur
+    function checkUsernameValidity(username) {
+        if (username.length === 0) {
+            return { valid: false, message: '', className: '' };
+        }
+        
+        if (username.length < 3) {
+            return { valid: false, message: '❌ Trop court (minimum 3 caractères)', className: 'text-danger' };
+        }
+        
+        if (username.length > 20) {
+            return { valid: false, message: '❌ Trop long (maximum 20 caractères)', className: 'text-danger' };
+        }
+        
+        if (!/^[a-zA-Z0-9]+$/.test(username)) {
+            return { valid: false, message: '❌ Seuls les lettres et chiffres sont autorisés', className: 'text-danger' };
+        }
+        
+        return { valid: true, message: '✅ Format valide', className: 'text-success' };
+    }
+    
+    // Fonction pour vérifier la validité de l'adresse email
+    function checkEmailValidity(email) {
+        if (email.length === 0) {
+            return { valid: false, message: '', className: '' };
+        }
+        
+        const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+        
+        if (!emailRegex.test(email)) {
+            return { valid: false, message: '❌ Format d\'email invalide', className: 'text-danger' };
+        }
+        
+        return { valid: true, message: '✅ Format valide', className: 'text-success' };
+    }
+    
+    // Fonction pour vérifier la disponibilité de l'adresse email
+    async function checkEmailAvailability(email) {
+        try {
+            const response = await fetch(`/profil/check-email?email=${encodeURIComponent(email)}`);
+            const isAvailable = await response.json();
+            return isAvailable;
+        } catch (error) {
+            console.error('Erreur lors de la vérification de l\'adresse email:', error);
+            return false;
+        }
+    }
+    
+    // Fonction pour vérifier la disponibilité du nom d'utilisateur
+    async function checkUsernameAvailability(username) {
+        try {
+            const response = await fetch(`/profil/check-username?username=${encodeURIComponent(username)}`);
+            const isAvailable = await response.json();
+            return isAvailable;
+        } catch (error) {
+            console.error('Erreur lors de la vérification du nom d\'utilisateur:', error);
+            return false;
+        }
+    }
+    
     // Fonction pour vérifier si les mots de passe correspondent
     function checkPasswordMatch(password, confirm) {
         if (confirm.length === 0) {
@@ -285,6 +462,32 @@ document.addEventListener('DOMContentLoaded', function() {
         submitButton.disabled = !isValid;
     }
     
+    // Fonction pour mettre à jour l'état du bouton de nom d'utilisateur
+    function updateUsernameSubmitButton() {
+        const newUsername = newUsernameInput.value.trim();
+        const currentPassword = currentPasswordForUsernameInput.value;
+        
+        const usernameValidity = checkUsernameValidity(newUsername);
+        const isValid = usernameValidity.valid && 
+                       currentPassword.length > 0 && 
+                       newUsername.length > 0;
+        
+        usernameSubmitButton.disabled = !isValid;
+    }
+    
+    // Fonction pour mettre à jour l'état du bouton d'adresse email
+    function updateEmailSubmitButton() {
+        const newEmail = newEmailInput.value.trim();
+        const currentPassword = currentPasswordForEmailInput.value;
+        
+        const emailValidity = checkEmailValidity(newEmail);
+        const isValid = emailValidity.valid && 
+                       currentPassword.length > 0 && 
+                       newEmail.length > 0;
+        
+        emailSubmitButton.disabled = !isValid;
+    }
+    
     // Écouteurs pour la validation en temps réel
     newPasswordInput.addEventListener('input', function() {
         const strength = checkPasswordStrength(this.value);
@@ -310,6 +513,103 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     currentPasswordInput.addEventListener('input', updateSubmitButton);
+    
+    // Écouteurs pour la modification du nom d'utilisateur
+    let usernameTimeout;
+    newUsernameInput.addEventListener('input', async function() {
+        const username = this.value.trim();
+        const validity = checkUsernameValidity(username);
+        
+        usernameAvailabilityDiv.textContent = validity.message;
+        usernameAvailabilityDiv.className = validity.className;
+        
+        if (validity.valid && username.length > 0) {
+            // Attendre 500ms avant de vérifier la disponibilité
+            clearTimeout(usernameTimeout);
+            usernameTimeout = setTimeout(async () => {
+                usernameAvailabilityDiv.textContent = '⏳ Vérification de la disponibilité...';
+                usernameAvailabilityDiv.className = 'text-info';
+                
+                const isAvailable = await checkUsernameAvailability(username);
+                if (isAvailable) {
+                    usernameAvailabilityDiv.textContent = '✅ Nom d\'utilisateur disponible';
+                    usernameAvailabilityDiv.className = 'text-success';
+                } else {
+                    usernameAvailabilityDiv.textContent = '❌ Nom d\'utilisateur déjà pris';
+                    usernameAvailabilityDiv.className = 'text-danger';
+                }
+            }, 500);
+        }
+        
+        updateUsernameSubmitButton();
+    });
+    
+    // Écouteurs pour la modification de l'email
+    let emailTimeout;
+    newEmailInput.addEventListener('input', async function() {
+        const email = this.value.trim();
+        const validity = checkEmailValidity(email);
+        
+        emailAvailabilityDiv.textContent = validity.message;
+        emailAvailabilityDiv.className = validity.className;
+        
+        if (validity.valid && email.length > 0) {
+            // Attendre 500ms avant de vérifier la disponibilité
+            clearTimeout(emailTimeout);
+            emailTimeout = setTimeout(async () => {
+                emailAvailabilityDiv.textContent = '⏳ Vérification de la disponibilité...';
+                emailAvailabilityDiv.className = 'text-info';
+                
+                const isAvailable = await checkEmailAvailability(email);
+                if (isAvailable) {
+                    emailAvailabilityDiv.textContent = '✅ Adresse email disponible';
+                    emailAvailabilityDiv.className = 'text-success';
+                } else {
+                    emailAvailabilityDiv.textContent = '❌ Adresse email déjà utilisée';
+                    emailAvailabilityDiv.className = 'text-danger';
+                }
+            }, 500);
+        }
+        
+        updateEmailSubmitButton();
+    });
+    
+    currentPasswordForUsernameInput.addEventListener('input', updateUsernameSubmitButton);
+    currentPasswordForEmailInput.addEventListener('input', updateEmailSubmitButton);
+    
+    // Validation avant soumission du formulaire d'email
+    emailForm.addEventListener('submit', function(e) {
+        const newEmail = newEmailInput.value.trim();
+        const validity = checkEmailValidity(newEmail);
+        
+        if (!validity.valid) {
+            e.preventDefault();
+            alert('L\'adresse email doit avoir un format valide.');
+            return;
+        }
+        
+        // Confirmation finale
+        if (!confirm('Êtes-vous sûr de vouloir modifier votre adresse email ?')) {
+            e.preventDefault();
+        }
+    });
+    
+    // Validation avant soumission du formulaire de nom d'utilisateur
+    usernameForm.addEventListener('submit', function(e) {
+        const newUsername = newUsernameInput.value.trim();
+        const validity = checkUsernameValidity(newUsername);
+        
+        if (!validity.valid) {
+            e.preventDefault();
+            alert('Le nom d\'utilisateur doit contenir entre 3 et 20 caractères alphanumériques.');
+            return;
+        }
+        
+        // Confirmation finale
+        if (!confirm('Êtes-vous sûr de vouloir modifier votre nom d\'utilisateur ?')) {
+            e.preventDefault();
+        }
+    });
     
     // Validation avant soumission
     passwordForm.addEventListener('submit', function(e) {

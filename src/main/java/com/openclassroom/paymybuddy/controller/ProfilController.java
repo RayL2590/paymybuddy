@@ -146,6 +146,186 @@ public class ProfilController {
 
         return "redirect:/profil";
     }
+    
+    /**
+     * Vérifie si un nom d'utilisateur est disponible (endpoint AJAX).
+     *
+     * @param username Le nom d'utilisateur à vérifier.
+     * @return true si le nom d'utilisateur est disponible, false sinon.
+     */
+    @GetMapping("/check-username")
+    @ResponseBody
+    public boolean checkUsernameAvailability(@RequestParam String username) {
+        User currentUser = authService.getCurrentUser();
+        if (currentUser == null) {
+            return false;
+        }
+        
+        return userService.isUsernameAvailable(username, currentUser.getId());
+    }
+    
+    /**
+     * Vérifie si une adresse email est disponible (endpoint AJAX).
+     *
+     * @param email L'adresse email à vérifier.
+     * @return true si l'adresse email est disponible, false sinon.
+     */
+    @GetMapping("/check-email")
+    @ResponseBody
+    public boolean checkEmailAvailability(@RequestParam String email) {
+        User currentUser = authService.getCurrentUser();
+        if (currentUser == null) {
+            return false;
+        }
+        
+        return userService.isEmailAvailable(email, currentUser.getId());
+    }
+
+    /**
+     * Permet à l'utilisateur de changer son nom d'utilisateur.
+     *
+     * @param newUsername Le nouveau nom d'utilisateur souhaité.
+     * @param currentPassword Le mot de passe actuel pour vérification.
+     * @param redirectAttributes Les attributs pour transmettre des messages à la vue.
+     * @return Une redirection vers la vue du profil ou la page de connexion si l'utilisateur n'est pas connecté.
+     */
+    @PostMapping("/change-username")
+    public String changeUsername(
+            @RequestParam String newUsername,
+            @RequestParam String currentPassword,
+            RedirectAttributes redirectAttributes) {
+
+        User currentUser = authService.getCurrentUser();
+        if (currentUser == null) {
+            logger.warn("Utilisateur non connecté tentant de modifier le nom d'utilisateur");
+            return "redirect:/login";
+        }
+
+        logger.info("Tentative de modification du nom d'utilisateur pour l'utilisateur ID: {}", currentUser.getId());
+
+        // Validation des paramètres
+        if (newUsername == null || newUsername.trim().isEmpty()) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Le nouveau nom d'utilisateur est requis");
+            return "redirect:/profil";
+        }
+
+        if (currentPassword == null || currentPassword.trim().isEmpty()) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Le mot de passe actuel est requis pour cette modification");
+            return "redirect:/profil";
+        }
+
+        // Validation du format du nom d'utilisateur
+        if (!isUsernameValid(newUsername)) {
+            redirectAttributes.addFlashAttribute("errorMessage", 
+                "Le nom d'utilisateur doit contenir entre 3 et 20 caractères alphanumériques");
+            return "redirect:/profil";
+        }
+
+        // Vérification du mot de passe actuel
+        if (!passwordEncoder.matches(currentPassword, currentUser.getPassword())) {
+            logger.warn("Tentative de modification du nom d'utilisateur avec un mauvais mot de passe pour l'utilisateur ID: {}", 
+                       currentUser.getId());
+            redirectAttributes.addFlashAttribute("errorMessage", "Mot de passe incorrect");
+            return "redirect:/profil";
+        }
+
+        // Vérifier si le nom d'utilisateur est identique à l'actuel
+        if (newUsername.equals(currentUser.getUsername())) {
+            redirectAttributes.addFlashAttribute("errorMessage", 
+                "Le nouveau nom d'utilisateur doit être différent de l'actuel");
+            return "redirect:/profil";
+        }
+
+        try {
+            // Modifier le nom d'utilisateur
+            userService.changeUsername(currentUser.getId(), newUsername);
+            logger.info("Nom d'utilisateur modifié avec succès pour l'utilisateur ID: {}", currentUser.getId());
+            redirectAttributes.addFlashAttribute("successMessage", "Nom d'utilisateur modifié avec succès");
+        } catch (IllegalArgumentException e) {
+            logger.warn("Tentative de modification avec un nom d'utilisateur déjà pris pour l'utilisateur ID: {}", 
+                       currentUser.getId());
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+        } catch (Exception e) {
+            logger.error("Erreur lors de la modification du nom d'utilisateur pour l'utilisateur ID: {}", 
+                        currentUser.getId(), e);
+            redirectAttributes.addFlashAttribute("errorMessage", "Erreur lors de la modification du nom d'utilisateur");
+        }
+
+        return "redirect:/profil";
+    }
+    
+    /**
+     * Permet à l'utilisateur de changer son adresse email.
+     *
+     * @param newEmail La nouvelle adresse email souhaitée.
+     * @param currentPassword Le mot de passe actuel pour vérification.
+     * @param redirectAttributes Les attributs pour transmettre des messages à la vue.
+     * @return Une redirection vers la vue du profil ou la page de connexion si l'utilisateur n'est pas connecté.
+     */
+    @PostMapping("/change-email")
+    public String changeEmail(
+            @RequestParam String newEmail,
+            @RequestParam String currentPassword,
+            RedirectAttributes redirectAttributes) {
+
+        User currentUser = authService.getCurrentUser();
+        if (currentUser == null) {
+            logger.warn("Utilisateur non connecté tentant de modifier l'adresse email");
+            return "redirect:/login";
+        }
+
+        logger.info("Tentative de modification de l'adresse email pour l'utilisateur ID: {}", currentUser.getId());
+
+        // Validation des paramètres
+        if (newEmail == null || newEmail.trim().isEmpty()) {
+            redirectAttributes.addFlashAttribute("errorMessage", "La nouvelle adresse email est requise");
+            return "redirect:/profil";
+        }
+
+        if (currentPassword == null || currentPassword.trim().isEmpty()) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Le mot de passe actuel est requis pour cette modification");
+            return "redirect:/profil";
+        }
+
+        // Validation du format de l'email
+        if (!isEmailValid(newEmail)) {
+            redirectAttributes.addFlashAttribute("errorMessage", 
+                "L'adresse email doit avoir un format valide");
+            return "redirect:/profil";
+        }
+
+        // Vérification du mot de passe actuel
+        if (!passwordEncoder.matches(currentPassword, currentUser.getPassword())) {
+            logger.warn("Tentative de modification de l'adresse email avec un mauvais mot de passe pour l'utilisateur ID: {}", 
+                       currentUser.getId());
+            redirectAttributes.addFlashAttribute("errorMessage", "Mot de passe incorrect");
+            return "redirect:/profil";
+        }
+
+        // Vérifier si l'adresse email est identique à l'actuelle
+        if (newEmail.equals(currentUser.getEmail())) {
+            redirectAttributes.addFlashAttribute("errorMessage", 
+                "La nouvelle adresse email doit être différente de l'actuelle");
+            return "redirect:/profil";
+        }
+
+        try {
+            // Modifier l'adresse email
+            userService.changeEmail(currentUser.getId(), newEmail);
+            logger.info("Adresse email modifiée avec succès pour l'utilisateur ID: {}", currentUser.getId());
+            redirectAttributes.addFlashAttribute("successMessage", "Adresse email modifiée avec succès");
+        } catch (IllegalArgumentException e) {
+            logger.warn("Tentative de modification avec une adresse email déjà prise pour l'utilisateur ID: {}", 
+                       currentUser.getId());
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+        } catch (Exception e) {
+            logger.error("Erreur lors de la modification de l'adresse email pour l'utilisateur ID: {}", 
+                        currentUser.getId(), e);
+            redirectAttributes.addFlashAttribute("errorMessage", "Erreur lors de la modification de l'adresse email");
+        }
+
+        return "redirect:/profil";
+    }
 
     /**
      * Valide la force du mot de passe.
@@ -162,5 +342,46 @@ public class ProfilController {
         boolean hasDigit = password.matches(".*\\d.*");
 
         return hasLetter && hasDigit;
+    }
+    
+    /**
+     * Valide le format du nom d'utilisateur.
+     *
+     * @param username Le nom d'utilisateur à valider.
+     * @return true si le nom d'utilisateur est valide, false sinon.
+     */
+    private boolean isUsernameValid(String username) {
+        if (username == null || username.trim().isEmpty()) {
+            return false;
+        }
+        
+        String trimmedUsername = username.trim();
+        
+        // Vérifier la longueur (entre 3 et 20 caractères)
+        if (trimmedUsername.length() < 3 || trimmedUsername.length() > 20) {
+            return false;
+        }
+        
+        // Vérifier que le nom d'utilisateur contient uniquement des caractères alphanumériques
+        return trimmedUsername.matches("^[a-zA-Z0-9]+$");
+    }
+    
+    /**
+     * Valide le format de l'adresse email.
+     *
+     * @param email L'adresse email à valider.
+     * @return true si l'adresse email est valide, false sinon.
+     */
+    private boolean isEmailValid(String email) {
+        if (email == null || email.trim().isEmpty()) {
+            return false;
+        }
+        
+        String trimmedEmail = email.trim();
+        
+        // Expression régulière pour valider l'email
+        String emailRegex = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$";
+        
+        return trimmedEmail.matches(emailRegex);
     }
 }
