@@ -15,7 +15,8 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.util.List;
 
 /**
- * Contrôleur pour gérer les relations entre utilisateurs.
+ * Contrôleur pour gérer les relations entre utilisateurs via l'interface web.
+ * Ce contrôleur gère les vues et redirige vers les endpoints REST standardisés.
  */
 @Controller
 @RequestMapping("/user-relations")

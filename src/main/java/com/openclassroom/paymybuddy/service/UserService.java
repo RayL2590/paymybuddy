@@ -208,6 +208,39 @@ public class UserService {
     }
     
     /**
+     * Valide les limites de balance
+     *
+     * @param balance Balance à valider
+     * @throws IllegalArgumentException si la balance est invalide
+     */
+    private void validateBalanceLimits(BigDecimal balance) {
+        if (balance.compareTo(BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException("La balance ne peut pas être inférieure à 0€");
+        }
+        
+        if (balance.compareTo(BigDecimal.valueOf(10000)) > 0) {
+            throw new IllegalArgumentException("La balance ne peut pas être supérieure à 10 000€");
+        }
+    }
+
+    /**
+     * Valide les paramètres d'ajustement de balance
+     *
+     * @param amount Montant à valider
+     * @param operation Opération à valider
+     * @throws IllegalArgumentException si les paramètres sont invalides
+     */
+    private void validateAdjustmentParameters(BigDecimal amount, String operation) {
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Le montant doit être supérieur à 0");
+        }
+        
+        if (!"ADD".equals(operation) && !"SUBTRACT".equals(operation)) {
+            throw new IllegalArgumentException("Opération invalide. Utilisez 'ADD' ou 'SUBTRACT'");
+        }
+    }
+
+    /**
      * Modifier la balance d'un utilisateur
      *
      * @param userId ID de l'utilisateur
@@ -217,13 +250,7 @@ public class UserService {
         logger.info("Tentative de modification de balance - UserId: {}, Nouveau montant: {}", userId, newBalance);
         
         // Validation des limites
-        if (newBalance.compareTo(BigDecimal.ZERO) < 0) {
-            throw new IllegalArgumentException("La balance ne peut pas être inférieure à 0€");
-        }
-        
-        if (newBalance.compareTo(BigDecimal.valueOf(10000)) > 0) {
-            throw new IllegalArgumentException("La balance ne peut pas être supérieure à 10 000€");
-        }
+        validateBalanceLimits(newBalance);
         
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("Utilisateur non trouvé"));
@@ -247,6 +274,9 @@ public class UserService {
         logger.info("Tentative d'ajustement de balance - UserId: {}, Montant: {}, Opération: {}", 
                    userId, amount, operation);
         
+        // Validation des paramètres d'entrée
+        validateAdjustmentParameters(amount, operation);
+        
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("Utilisateur non trouvé"));
         
@@ -255,10 +285,8 @@ public class UserService {
         
         if ("ADD".equals(operation)) {
             newBalance = currentBalance.add(amount);
-        } else if ("SUBTRACT".equals(operation)) {
+        } else { // "SUBTRACT" - déjà validé dans validateAdjustmentParameters
             newBalance = currentBalance.subtract(amount);
-        } else {
-            throw new IllegalArgumentException("Opération invalide. Utilisez 'ADD' ou 'SUBTRACT'");
         }
         
         // Utiliser la méthode de validation existante

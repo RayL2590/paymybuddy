@@ -1,15 +1,19 @@
 package com.openclassroom.paymybuddy.dto;
 
-import lombok.Getter;
+import lombok.Data;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 
 /**
  * DTO pour représenter une relation entre utilisateurs.
  */
-@Getter
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class RelationDTO {
 
     /**
-     * L'identifiant de la relation.
+     * L'identifiant de l'utilisateur connecté (ami).
      */
     private Long id;
 
@@ -17,16 +21,5 @@ public class RelationDTO {
      * Le nom de l'utilisateur lié par cette relation.
      */
     private String name;
-
-    /**
-     * Constructeur avec paramètres.
-     *
-     * @param id L'identifiant de la relation.
-     * @param name Le nom de l'utilisateur lié par cette relation.
-     */
-    public RelationDTO(Long id, String name) {
-        this.id = id;
-        this.name = name;
-    }
 
 }

@@ -11,9 +11,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.openclassroom.paymybuddy.repository.UserRepository;
-import jakarta.persistence.EntityNotFoundException;
 
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -133,6 +131,18 @@ public class TransactionService {
         User receiver = userRepository.findById(transferDTO.getReceiverId())
                 .orElseThrow(() -> new IllegalArgumentException("Destinataire introuvable"));
 
+        boolean isConnected = userConnectionRepository.existsByUserIdAndConnectionId(
+        sender.getId(), receiver.getId());
+
+        if (!isConnected) {
+            throw new IllegalArgumentException("Vous ne pouvez envoyer de l'argent qu'à vos connexions");
+        }
+
+
+        if (sender.getId().equals(receiver.getId())) {
+            throw new IllegalArgumentException("Vous ne pouvez pas effectuer un transfert vers vous-même");
+        }
+
         if (sender.getBalance().compareTo(transferDTO.getAmount()) < 0) {
             logger.warn("Solde insuffisant pour l'utilisateur {}", sender.getUsername());
             throw new IllegalArgumentException("Balance insuffisante pour effectuer la transaction");
@@ -158,52 +168,6 @@ public class TransactionService {
         logger.info("Transaction enregistrée avec l'id {}", savedTransaction.getId());
 
         return savedTransaction;
-    }
-    
-    /**
-     * Ajuster la balance d'un utilisateur (ajouter ou retirer de l'argent)
-     *
-     * @param userId ID de l'utilisateur
-     * @param amount Montant à ajuster
-     * @param operation Type d'opération ("ADD" ou "SUBTRACT")
-     */
-    @Transactional
-    public void adjustUserBalance(Long userId, BigDecimal amount, String operation) {
-        Logger logger = LoggerFactory.getLogger(TransactionService.class);
-        logger.info("Ajustement de balance - UserId: {}, Montant: {}, Opération: {}", userId, amount, operation);
-        
-        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("Le montant doit être supérieur à 0");
-        }
-        
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException("Utilisateur non trouvé"));
-        
-        BigDecimal currentBalance = user.getBalance();
-        BigDecimal newBalance;
-        
-        if ("ADD".equals(operation)) {
-            newBalance = currentBalance.add(amount);
-        } else if ("SUBTRACT".equals(operation)) {
-            newBalance = currentBalance.subtract(amount);
-        } else {
-            throw new IllegalArgumentException("Opération invalide. Utilisez 'ADD' ou 'SUBTRACT'");
-        }
-        
-        // Validation des limites
-        if (newBalance.compareTo(BigDecimal.ZERO) < 0) {
-            throw new IllegalArgumentException("La balance ne peut pas être inférieure à 0€");
-        }
-        
-        if (newBalance.compareTo(BigDecimal.valueOf(10000)) > 0) {
-            throw new IllegalArgumentException("La balance ne peut pas être supérieure à 10 000€");
-        }
-        
-        user.setBalance(newBalance);
-        userRepository.save(user);
-        
-        logger.info("Balance ajustée avec succès - UserId: {}, Ancienne balance: {}€, Nouvelle balance: {}€", 
-                   userId, currentBalance, newBalance);
     }
 
 }

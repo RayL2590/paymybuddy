@@ -1,6 +1,8 @@
 package com.openclassroom.paymybuddy.dto;
 
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
 import java.math.BigDecimal;
 
 import jakarta.validation.constraints.*;
@@ -9,6 +11,8 @@ import jakarta.validation.constraints.*;
  * DTO pour représenter les données d'un transfert d'argent entre utilisateurs.
  */
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class TransferDTO {
 
     /**

@@ -7,7 +7,7 @@ CREATE TABLE app_user (
                           username VARCHAR(100) UNIQUE NOT NULL,
                           email VARCHAR(255) UNIQUE NOT NULL,
                           password VARCHAR(255) NOT NULL,
-                          balance DECIMAL(10,2) NOT NULL DEFAULT 1000.00,
+                          balance DECIMAL(10,2) NOT NULL DEFAULT 0.00,
                           role VARCHAR(50) NOT NULL DEFAULT 'USER'
 );
 
@@ -31,16 +31,16 @@ CREATE TABLE transaction (
 );
 
 INSERT INTO app_user (username, email, password) VALUES
-                                                     ('alice', 'alice@mail.com', '$2a$10$xJwL5vxZJhNpDLwFpQhQ.eGYM3U9Q6QZ7Jz8cBQd6w7tq1JkXvYbG'), -- Motdepasse1
-                                                     ('bob', 'bob@mail.com', '$2a$10$yHpKjwTmZRkOqN7NGQxR.e3z3Q1WQZ7Jz8cBQd6w7tq1JkXvYbG'),     -- Motdepasse2
-                                                     ('charlie', 'charlie@mail.com', '$2a$10$zKlPkjwTmZRkOqN7NGQxR.e3z3Q1WQZ7Jz8cBQd6w7tq1JkXvYbG'),
-                                                     ('diana', 'diana@mail.com', '$2a$10$wMxPkjwTmZRkOqN7NGQxR.e3z3Q1WQZ7Jz8cBQd6w7tq1JkXvYbG'),
-                                                     ('eve', 'eve@mail.com', '$2a$10$vNcQkjwTmZRkOqN7NGQxR.e3z3Q1WQZ7Jz8cBQd6w7tq1JkXvYbG'),
-                                                     ('frank', 'frank@mail.com', '$2a$10$uBdRkjwTmZRkOqN7NGQxR.e3z3Q1WQZ7Jz8cBQd6w7tq1JkXvYbG'),
-                                                     ('grace', 'grace@mail.com', '$2a$10$tAsEkjwTmZRkOqN7NGQxR.e3z3Q1WQZ7Jz8cBQd6w7tq1JkXvYbG'),
-                                                     ('henry', 'henry@mail.com', '$2a$10$sZrDkjwTmZRkOqN7NGQxR.e3z3Q1WQZ7Jz8cBQd6w7tq1JkXvYbG'),
-                                                     ('isabel', 'isabel@mail.com', '$2a$10$rYqCkjwTmZRkOqN7NGQxR.e3z3Q1WQZ7Jz8cBQd6w7tq1JkXvYbG'),
-                                                     ('jack', 'jack@mail.com', '$2a$10$qXpBkjwTmZRkOqN7NGQxR.e3z3Q1WQZ7Jz8cBQd6w7tq1JkXvYbG');
+                                                     ('alice', 'alice@mail.com', '$2y$10$6/8fJJjHtymEsk7OuFpCXu6KLLrblimqXb8bpdKZ3x2z2nKwNiDR2'), -- alice1234
+                                                     ('bob', 'bob@mail.com', '$2y$10$RoZjefFKwdikbbNmvRpahunv.GMBz.OygrqPWLK0oXiNA.cm3FZVK'),     -- bob12345
+                                                     ('charlie', 'charlie@mail.com', '$2y$10$r4wUs/rK7RB.F4agO8lyIuwjQggGDSaDpLq5KOKbP8LAozuzoST6a'), -- charlie1234
+                                                     ('diana', 'diana@mail.com', '$2y$10$176NtCmF6v0fdL2zkuIyqOJ6CKXsad5lnogCPmfjDG609LOnjTGEu'), -- diana1234
+                                                     ('eve', 'eve@mail.com', '$2y$10$BN1Z1Ov10B5NzWOnHvZauO2fGGUG149lqFxqDhID1b09mOI90VRSu'), -- eve 12345
+                                                     ('frank', 'frank@mail.com', '$2y$10$tw/DD1uKXqa0xfIz8hS1ye0KBUJZjZqQkjE4Wf4CPspD5w7ksZUrC'), -- frank1234
+                                                     ('grace', 'grace@mail.com', '$2y$10$l.OArz3hdiWYY3NnyUJXs.EOsVTIZe4SEEOyQVIoQmSiUeZ9bfm/u'), -- grace1234
+                                                     ('henry', 'henry@mail.com', '$2y$10$J2mftNOXYHUw68wUByrvm.1aDhz6nt6RRJ/nl3La8mepzdCow.RJe'), -- henry1234
+                                                     ('isabel', 'isabel@mail.com', '$2y$10$voQ6w3Lf8GOGZxvGTjsM9ORc7MhpxV7qTUI3drRG11y32aTq07qkC'), -- isabel1234
+                                                     ('jack', 'jack@mail.com', '$2y$10$FtMkCQh.S1/NuZaN90J76O4ynMAndTaxxlCs81/gHrE2LiuZTgxAe');
 
 INSERT INTO user_connections (user_id, connection_id) VALUES
                                                           (1, 2), (1, 3), (1, 4), -- Alice est amie avec Bob, Charlie et Diana

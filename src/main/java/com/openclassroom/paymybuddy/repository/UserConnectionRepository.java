@@ -28,4 +28,14 @@ public interface UserConnectionRepository extends JpaRepository<UserConnection, 
      * @return true si la connexion existe, false sinon.
      */
     boolean existsByUserAndConnection(User user, User connection);
+
+    /**
+     * Vérifie si une connexion existe entre deux utilisateurs à partir de leurs identifiants.
+     *
+     * @param userId L'identifiant de l'utilisateur principal.
+     * @param connectionId L'identifiant de l'utilisateur connecté.
+     * @return true si la connexion existe, false sinon.
+     */
+    boolean existsByUserIdAndConnectionId(Long userId, Long connectionId);
+    
 }

@@ -4,10 +4,16 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import jakarta.validation.constraints.Pattern;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
 
 /**
  * DTO pour gérer les données du formulaire d'inscription.
  */
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class RegisterDTO {
 
     /**
@@ -37,98 +43,6 @@ public class RegisterDTO {
      */
     @NotBlank(message = "La confirmation du mot de passe est obligatoire")
     private String confirmPassword;
-
-    /**
-     * Constructeur par défaut.
-     */
-    public RegisterDTO() {}
-
-    /**
-     * Constructeur avec paramètres.
-     *
-     * @param username Le nom d'utilisateur.
-     * @param email L'email de l'utilisateur.
-     * @param password Le mot de passe de l'utilisateur.
-     * @param confirmPassword La confirmation du mot de passe.
-     */
-    public RegisterDTO(String username, String email, String password, String confirmPassword) {
-        this.username = username;
-        this.email = email;
-        this.password = password;
-        this.confirmPassword = confirmPassword;
-    }
-
-    /**
-     * Retourne le nom d'utilisateur.
-     *
-     * @return Le nom d'utilisateur.
-     */
-    public String getUsername() {
-        return username;
-    }
-
-    /**
-     * Définit le nom d'utilisateur.
-     *
-     * @param username Le nom d'utilisateur.
-     */
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    /**
-     * Retourne l'email de l'utilisateur.
-     *
-     * @return L'email de l'utilisateur.
-     */
-    public String getEmail() {
-        return email;
-    }
-
-    /**
-     * Définit l'email de l'utilisateur.
-     *
-     * @param email L'email de l'utilisateur.
-     */
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    /**
-     * Retourne le mot de passe de l'utilisateur.
-     *
-     * @return Le mot de passe de l'utilisateur.
-     */
-    public String getPassword() {
-        return password;
-    }
-
-    /**
-     * Définit le mot de passe de l'utilisateur.
-     *
-     * @param password Le mot de passe de l'utilisateur.
-     */
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    /**
-     * Retourne la confirmation du mot de passe.
-     *
-     * @return La confirmation du mot de passe.
-     */
-    public String getConfirmPassword() {
-        return confirmPassword;
-    }
-
-    /**
-     * Définit la confirmation du mot de passe.
-     *
-     * @param confirmPassword La confirmation du mot de passe.
-     */
-    public void setConfirmPassword(String confirmPassword) {
-        this.confirmPassword = confirmPassword;
-    }
 
     /**
      * Vérifie si les mots de passe correspondent.

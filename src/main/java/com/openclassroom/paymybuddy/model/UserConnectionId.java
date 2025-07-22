@@ -1,16 +1,17 @@
 package com.openclassroom.paymybuddy.model;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.io.Serializable;
-import java.util.Objects;
 
 /**
  * Classe représentant l'identifiant composite pour une connexion entre deux utilisateurs.
  */
 @Setter
 @Getter
+@EqualsAndHashCode
 public class UserConnectionId implements Serializable {
 
     /**
@@ -40,27 +41,4 @@ public class UserConnectionId implements Serializable {
         this.connection = connection;
     }
 
-    /**
-     * Vérifie si deux objets UserConnectionId sont égaux.
-     *
-     * @param o L'objet à comparer.
-     * @return true si les objets sont égaux, false sinon.
-     */
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof UserConnectionId that)) return false;
-        return Objects.equals(user, that.user) &&
-                Objects.equals(connection, that.connection);
-    }
-
-    /**
-     * Calcule le hashcode de l'objet.
-     *
-     * @return Le hashcode de l'objet.
-     */
-    @Override
-    public int hashCode() {
-        return Objects.hash(user, connection);
-    }
 }

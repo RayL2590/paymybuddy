@@ -18,7 +18,7 @@ public class UserConnection {
      * L'utilisateur principal dans la connexion.
      */
     @Id
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
@@ -26,7 +26,7 @@ public class UserConnection {
      * L'utilisateur secondaire dans la connexion.
      */
     @Id
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "connection_id", nullable = false)
     private User connection;
 

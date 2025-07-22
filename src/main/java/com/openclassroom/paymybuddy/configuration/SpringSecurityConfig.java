@@ -12,10 +12,6 @@ import org.springframework.security.web.SecurityFilterChain;
 
 /**
  * Configuration de sécurité Spring Security pour l'application PayMyBuddy.
- * 
- * Cette classe configure l'authentification, l'autorisation, et la gestion des sessions
- * pour sécuriser l'application de transfert d'argent entre amis.
- * 
  * <p>Fonctionnalités configurées :</p>
  * <ul>
  *   <li>Authentification par email et mot de passe</li>
@@ -23,30 +19,6 @@ import org.springframework.security.web.SecurityFilterChain;
  *   <li>Protection des endpoints sensibles</li>
  *   <li>Gestion des pages de connexion et déconnexion</li>
  *   <li>Encodage sécurisé des mots de passe avec BCrypt</li>
- * </ul>
- * 
- * <h3>Architecture de sécurité :</h3>
- * <p>L'application utilise une architecture de sécurité en couches :</p>
- * <ol>
- *   <li><strong>Couche Web :</strong> Filtrage des requêtes HTTP et gestion des sessions</li>
- *   <li><strong>Couche Authentification :</strong> Vérification des identifiants utilisateur</li>
- *   <li><strong>Couche Autorisation :</strong> Contrôle d'accès basé sur les rôles</li>
- *   <li><strong>Couche Données :</strong> Protection des informations sensibles en base</li>
- * </ol>
- * 
- * <h3>Niveaux d'accès :</h3>
- * <ul>
- *   <li><strong>Public :</strong> Pages d'accueil, connexion, inscription</li>
- *   <li><strong>Authentifié :</strong> Transactions, relations, profil utilisateur</li>
- *   <li><strong>Administrateur :</strong> Gestion système et utilisateurs</li>
- * </ul>
- * 
- * <h3>Sécurisation des mots de passe :</h3>
- * <p>Les mots de passe sont protégés par l'algorithme BCrypt qui offre :</p>
- * <ul>
- *   <li>Hachage irréversible avec salt automatique</li>
- *   <li>Résistance aux attaques par dictionnaire et force brute</li>
- *   <li>Coût de calcul adaptatif face à l'évolution technologique</li>
  * </ul>
  * 
  * @author PayMyBuddy Team
@@ -69,32 +41,6 @@ public class SpringSecurityConfig {
 
     /**
      * Configure la chaîne de filtres de sécurité pour l'application.
-     * 
-     * <p>Cette méthode définit :</p>
-     * <ul>
-     *   <li><strong>Autorisations HTTP :</strong>
-     *     <ul>
-     *       <li>Accès libre : pages publiques (/, /login, /register) et ressources statiques</li>
-     *       <li>Accès authentifié : transactions et relations utilisateur</li>
-     *       <li>Accès admin : fonctionnalités d'administration</li>
-     *     </ul>
-     *   </li>
-     *   <li><strong>Authentification par formulaire :</strong>
-     *     <ul>
-     *       <li>Page de connexion personnalisée (/login)</li>
-     *       <li>Utilisation de l'email comme identifiant</li>
-     *       <li>Redirection vers /my-transactions après connexion réussie</li>
-     *       <li>Gestion des erreurs de connexion</li>
-     *     </ul>
-     *   </li>
-     *   <li><strong>Gestion de déconnexion :</strong>
-     *     <ul>
-     *       <li>URL de déconnexion : /logout</li>
-     *       <li>Redirection vers la page de connexion après déconnexion</li>
-     *     </ul>
-     *   </li>
-     * </ul>
-     * 
      * @param http l'objet HttpSecurity pour configurer les règles de sécurité web
      * @return SecurityFilterChain la chaîne de filtres de sécurité configurée
      * @throws Exception si une erreur survient lors de la configuration
@@ -110,6 +56,8 @@ public class SpringSecurityConfig {
                 auth.requestMatchers("/", "/login", "/register", "/css/**", "/js/**", "/images/**").permitAll();
                 // Accès authentifié requis pour les fonctionnalités utilisateur
                 auth.requestMatchers("/user-transactions/**", "/user-relations/**", "/profil/**").authenticated();
+                // Accès authentifié requis pour les API REST
+                auth.requestMatchers("/api/relations/**").authenticated();
                 // Accès admin requis pour les fonctionnalités d'administration
                 auth.requestMatchers("/admin/**").hasRole("ADMIN");
                 // Toute autre requête nécessite une authentification
@@ -127,23 +75,14 @@ public class SpringSecurityConfig {
                 .logoutSuccessUrl("/login?logout=true") // Redirection après déconnexion
                 .permitAll()                            // Accès libre à la déconnexion
             )
+            .csrf(csrf -> csrf
+                .ignoringRequestMatchers("/api/**")     // Désactive CSRF pour les API REST
+            )
             .build();
     }
 
     /**
      * Configure l'encodeur de mots de passe BCrypt.
-     * 
-     * <p>BCrypt est un algorithme de hachage adaptatif spécialement conçu pour les mots de passe.
-     * Il intègre un "salt" automatique et permet d'ajuster le coût de calcul pour résister
-     * aux attaques par force brute même avec l'évolution de la puissance de calcul.</p>
-     * 
-     * <p>Avantages de BCrypt :</p>
-     * <ul>
-     *   <li>Résistant aux attaques temporelles</li>
-     *   <li>Salt automatique pour chaque mot de passe</li>
-     *   <li>Coût de calcul ajustable</li>
-     *   <li>Largement testé et approuvé par la communauté sécurité</li>
-     * </ul>
      * 
      * @return BCryptPasswordEncoder l'encodeur de mots de passe configuré
      * 

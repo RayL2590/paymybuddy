@@ -29,7 +29,7 @@ public class Transaction {
     /**
      * L'utilisateur qui envoie l'argent.
      */
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "sender_id", nullable = false)
     @JsonIgnore
     private User sender;

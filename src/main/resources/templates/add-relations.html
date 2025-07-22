@@ -106,7 +106,7 @@
           </p>
         </div>
 
-        <form th:action="@{/user-relations/add}" method="post" class="mb-4">
+        <form id="addRelationForm" class="mb-4">
           <div class="mb-3">
             <label for="searchInput" class="form-label">Email ou nom d'utilisateur</label>
             <div class="position-relative">
@@ -148,7 +148,7 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        fetch(`/user-relations/search?term=${encodeURIComponent(term)}`)
+        fetch(`/api/relations/search?term=${encodeURIComponent(term)}`)
             .then(response => {
                 if (!response.ok) {
                     throw new Error('Erreur de recherche');
@@ -196,6 +196,61 @@ document.addEventListener('DOMContentLoaded', function() {
     function selectUser(user) {
         searchInput.value = user.email;
         hideResults();
+    }
+    
+    // Gestion de la soumission du formulaire avec AJAX
+    document.getElementById('addRelationForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+        
+        const email = searchInput.value.trim();
+        if (!email) {
+            showMessage('Veuillez saisir un email ou nom d utilisateur', 'error');
+            return;
+        }
+        
+        // Créer les données du formulaire
+        const formData = new FormData();
+        formData.append('email', email);
+        
+        // Envoyer la requête vers l'endpoint REST
+        fetch('/api/relations', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => {
+            if (response.ok) {
+                return response.text();
+            } else {
+                return response.text().then(text => { throw new Error(text); });
+            }
+        })
+        .then(message => {
+            showMessage(message, 'success');
+            searchInput.value = '';
+            // Rediriger vers la page des transactions après un délai
+            setTimeout(() => {
+                window.location.href = '/user-transactions/' + /*[[${user.id}]]*/ '1';
+            }, 1500);
+        })
+        .catch(error => {
+            showMessage(error.message || 'Une erreur s est produite', 'error');
+        });
+    });
+    
+    // Fonction pour afficher les messages
+    function showMessage(message, type) {
+        // Supprimer les anciens messages
+        const existingMessages = document.querySelectorAll('.alert');
+        existingMessages.forEach(msg => msg.remove());
+        
+        // Créer le nouveau message
+        const alertDiv = document.createElement('div');
+        alertDiv.className = 'alert alert-' + (type === 'success' ? 'success' : 'danger') + ' alert-dismissible fade show';
+        alertDiv.innerHTML = message + '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>';
+        
+        // Insérer le message au début du formulaire
+        const form = document.getElementById('addRelationForm');
+        form.parentNode.insertBefore(alertDiv, form);
     }
     
     // Fonction pour afficher les résultats

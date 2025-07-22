@@ -5,6 +5,7 @@ import com.openclassroom.paymybuddy.dto.TransferDTO;
 import com.openclassroom.paymybuddy.model.Transaction;
 import com.openclassroom.paymybuddy.model.User;
 import com.openclassroom.paymybuddy.service.TransactionService;
+import com.openclassroom.paymybuddy.service.UserService;
 import com.openclassroom.paymybuddy.service.AuthService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,7 +18,8 @@ import java.math.BigDecimal;
 import java.util.List;
 
 /**
- * Contrôleur pour gérer les transactions des utilisateurs.
+ * Contrôleur pour gérer les transactions des utilisateurs via l'interface web.
+ * Ce contrôleur gère les vues et redirige vers les endpoints REST standardisés.
  */
 @Controller
 @RequestMapping("/user-transactions")
@@ -34,6 +36,11 @@ public class UserTransactionController {
     private final TransactionService transactionService;
 
     /**
+     * Service pour gérer les utilisateurs.
+     */
+    private final UserService userService;
+
+    /**
      * Service d'authentification pour récupérer l'utilisateur connecté.
      */
     private final AuthService authService;
@@ -42,10 +49,12 @@ public class UserTransactionController {
      * Constructeur pour injecter les services nécessaires.
      *
      * @param transactionService Service pour gérer les transactions.
+     * @param userService Service pour gérer les utilisateurs.
      * @param authService Service d'authentification.
      */
-    public UserTransactionController(TransactionService transactionService, AuthService authService) {
+    public UserTransactionController(TransactionService transactionService, UserService userService, AuthService authService) {
         this.transactionService = transactionService;
+        this.userService = userService;
         this.authService = authService;
     }
 
@@ -138,14 +147,13 @@ public class UserTransactionController {
         }
 
         logger.info("✅ Utilisateur connecté vérifié: {}", currentUser.getEmail());
-
-        // ✅ DÉFINIR LE SENDER AVANT LA VALIDATION
+        // Assigner l'ID de l'utilisateur actuel à l'expéditeur du transfert
         transferDTO.setSenderId(currentUser.getId());
 
         logger.info("📝 Données reçues - Destinataire ID: {}, Montant: {}, Description: {}", 
                    transferDTO.getReceiverId(), transferDTO.getAmount(), transferDTO.getDescription());
 
-        // ✅ VALIDATION MANUELLE APRÈS AVOIR DÉFINI LE SENDER
+        // Validation des données du transfert
         if (transferDTO.getReceiverId() == null) {
             logger.warn("❌ Destinataire manquant");
             redirectAttributes.addFlashAttribute("errorMessage", "Veuillez sélectionner un destinataire");
@@ -206,7 +214,7 @@ public class UserTransactionController {
         }
 
         try {
-            transactionService.adjustUserBalance(userId, amount, "ADD");
+            userService.adjustUserBalance(userId, amount, "ADD");
             logger.info("Argent ajouté avec succès - Utilisateur ID: {}, Montant: {}", userId, amount);
             redirectAttributes.addFlashAttribute("successMessage", 
                 String.format("%.2f€ ajoutés à votre balance avec succès", amount));
@@ -245,7 +253,7 @@ public class UserTransactionController {
         }
 
         try {
-            transactionService.adjustUserBalance(userId, amount, "SUBTRACT");
+            userService.adjustUserBalance(userId, amount, "SUBTRACT");
             logger.info("Argent retiré avec succès - Utilisateur ID: {}, Montant: {}", userId, amount);
             redirectAttributes.addFlashAttribute("successMessage", 
                 String.format("%.2f€ retirés de votre balance avec succès", amount));
