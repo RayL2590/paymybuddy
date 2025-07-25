@@ -595,7 +595,7 @@ class UserServiceTest {
     void findUserByEmailOrUsername_WithExistingUsername_ShouldReturnUser() {
         // Given
         String identifier = "testuser";
-        when(userRepository.findByEmail(identifier)).thenReturn(Optional.empty());
+        
         when(userRepository.findByUsername(identifier)).thenReturn(Optional.of(existingUser));
 
         // When
@@ -604,15 +604,16 @@ class UserServiceTest {
         // Then
         assertThat(result).isPresent();
         assertThat(result.get()).isEqualTo(existingUser);
-        verify(userRepository).findByEmail(identifier);
+        
         verify(userRepository).findByUsername(identifier);
+        verify(userRepository, never()).findByEmail(anyString());
     }
 
     @Test
     void findUserByEmailOrUsername_WithNonExistingIdentifier_ShouldReturnEmpty() {
         // Given
         String identifier = "nonexistent";
-        when(userRepository.findByEmail(identifier)).thenReturn(Optional.empty());
+        
         when(userRepository.findByUsername(identifier)).thenReturn(Optional.empty());
 
         // When
@@ -620,8 +621,79 @@ class UserServiceTest {
 
         // Then
         assertThat(result).isEmpty();
-        verify(userRepository).findByEmail(identifier);
+        
         verify(userRepository).findByUsername(identifier);
+        verify(userRepository, never()).findByEmail(anyString());
+    }
+
+    @Test
+    void findUserByEmailOrUsername_WithNonExistingEmail_ShouldReturnEmpty() {
+        // Given
+        String identifier = "notfound@example.com";
+        when(userRepository.findByEmail(identifier)).thenReturn(Optional.empty());
+
+        // When
+        Optional<User> result = userService.findUserByEmailOrUsername(identifier);
+
+        // Then
+        assertThat(result).isEmpty();
+        verify(userRepository).findByEmail(identifier);
+        verify(userRepository, never()).findByUsername(anyString());
+    }
+
+    @Test
+    void findUserByEmailOrUsername_WithEmailFormat_ShouldSearchByEmailOnly() {
+        // Given
+        String identifier = "user@domain.com";
+        when(userRepository.findByEmail(identifier)).thenReturn(Optional.of(existingUser));
+
+        // When
+        Optional<User> result = userService.findUserByEmailOrUsername(identifier);
+
+        // Then
+        assertThat(result).isPresent();
+        verify(userRepository).findByEmail(identifier);
+        verify(userRepository, never()).findByUsername(anyString());
+    }
+
+    @Test
+    void findUserByEmailOrUsername_WithUsernameFormat_ShouldSearchByUsernameOnly() {
+        // Given
+        String identifier = "username123";
+        when(userRepository.findByUsername(identifier)).thenReturn(Optional.of(existingUser));
+
+        // When
+        Optional<User> result = userService.findUserByEmailOrUsername(identifier);
+
+        // Then
+        assertThat(result).isPresent();
+        verify(userRepository).findByUsername(identifier);
+        verify(userRepository, never()).findByEmail(anyString());
+    }
+
+    @Test
+    void addUserConnectionByIdentifier_WithExistingBidirectionalConnection_ShouldThrowException() {
+        // Given
+        Long userId = 1L;
+        String identifier = "target@example.com";
+        User targetUser = User.builder().id(2L).email(identifier).build();
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
+        when(userRepository.findByEmail(identifier)).thenReturn(Optional.of(targetUser));
+        // ✅ Connexion existe dans un sens
+        when(userConnectionRepository.existsByUserAndConnection(existingUser, targetUser)).thenReturn(false);
+        when(userConnectionRepository.existsByUserAndConnection(targetUser, existingUser)).thenReturn(true);
+
+        // When & Then
+        assertThatThrownBy(() -> userService.addUserConnectionByIdentifier(userId, identifier))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Cette connexion existe déjà");
+
+        verify(userRepository).findById(userId);
+        verify(userRepository).findByEmail(identifier);
+        verify(userConnectionRepository).existsByUserAndConnection(existingUser, targetUser);
+        verify(userConnectionRepository).existsByUserAndConnection(targetUser, existingUser);
+        verify(userConnectionRepository, never()).save(any());
     }
 
     // ========== TESTS POUR addUserConnectionByIdentifier ==========
@@ -640,6 +712,7 @@ class UserServiceTest {
         when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
         when(userRepository.findByEmail(identifier)).thenReturn(Optional.of(targetUser));
         when(userConnectionRepository.existsByUserAndConnection(existingUser, targetUser)).thenReturn(false);
+        when(userConnectionRepository.existsByUserAndConnection(targetUser, existingUser)).thenReturn(false);
 
         // When
         userService.addUserConnectionByIdentifier(userId, identifier);
@@ -647,18 +720,19 @@ class UserServiceTest {
         // Then
         verify(userRepository).findById(userId);
         verify(userConnectionRepository).existsByUserAndConnection(existingUser, targetUser);
-        verify(userConnectionRepository).save(any());
+        verify(userConnectionRepository).existsByUserAndConnection(targetUser, existingUser);
+        
+        verify(userConnectionRepository, times(2)).save(any());
     }
 
     @Test
     void addUserConnectionByIdentifier_WithNonExistingTargetUser_ShouldThrowException() {
         // Given
         Long userId = 1L;
-        String identifier = "nonexistent@example.com";
+        String identifier = "nonexistent@example.com"; 
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
         when(userRepository.findByEmail(identifier)).thenReturn(Optional.empty());
-        when(userRepository.findByUsername(identifier)).thenReturn(Optional.empty());
 
         // When & Then
         assertThatThrownBy(() -> userService.addUserConnectionByIdentifier(userId, identifier))
@@ -666,6 +740,9 @@ class UserServiceTest {
                 .hasMessageContaining("Cet utilisateur n'existe pas");
 
         verify(userRepository).findById(userId);
+        verify(userRepository).findByEmail(identifier);
+        
+        verify(userRepository, never()).findByUsername(anyString());
         verify(userConnectionRepository, never()).save(any());
     }
 
@@ -673,10 +750,9 @@ class UserServiceTest {
     void addUserConnectionByIdentifier_WithSameUser_ShouldThrowException() {
         // Given
         Long userId = 1L;
-        String identifier = "testuser"; // Same username as existingUser
+        String identifier = "testuser"; 
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
-        when(userRepository.findByEmail(identifier)).thenReturn(Optional.empty());
         when(userRepository.findByUsername(identifier)).thenReturn(Optional.of(existingUser));
 
         // When & Then
@@ -685,6 +761,8 @@ class UserServiceTest {
                 .hasMessage("Vous ne pouvez pas vous ajouter vous-même");
 
         verify(userRepository).findById(userId);
+        verify(userRepository, never()).findByEmail(anyString());
+        verify(userRepository).findByUsername(identifier);
         verify(userConnectionRepository, never()).save(any());
     }
 

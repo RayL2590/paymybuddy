@@ -6,9 +6,13 @@ import com.openclassroom.paymybuddy.dto.ChangeEmailDTO;
 import com.openclassroom.paymybuddy.service.AuthService;
 import com.openclassroom.paymybuddy.service.UserService;
 import com.openclassroom.paymybuddy.model.User;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -264,7 +268,7 @@ public class ProfilController {
             @Valid @ModelAttribute ChangeEmailDTO changeEmailDTO,
             @RequestParam String currentPassword,
             BindingResult bindingResult,
-            RedirectAttributes redirectAttributes) {
+            RedirectAttributes redirectAttributes, HttpServletRequest request) {
 
         User currentUser = authService.getCurrentUser();
         if (currentUser == null) {
@@ -307,20 +311,28 @@ public class ProfilController {
 
         try {
             // Modifier l'adresse email
-            userService.changeEmail(currentUser.getId(), changeEmailDTO.getNewEmail());
-            logger.info("Adresse email modifiée avec succès pour l'utilisateur ID: {}", currentUser.getId());
-            redirectAttributes.addFlashAttribute("successMessage", "Adresse email modifiée avec succès");
+             userService.changeEmail(currentUser.getId(), changeEmailDTO.getNewEmail());
+
+            SecurityContextHolder.clearContext();
+            HttpSession session = request.getSession(false);
+            if (session != null) {
+                session.invalidate();
+            }
+            logger.info("Email modifié et utilisateur déconnecté - ID: {}", currentUser.getId());
+            redirectAttributes.addFlashAttribute("successMessage", 
+                "Email modifié avec succès. Veuillez vous reconnecter avec votre nouvel email.");
+            return "redirect:/login";
+            
         } catch (IllegalArgumentException e) {
             logger.warn("Tentative de modification avec une adresse email déjà prise pour l'utilisateur ID: {}", 
-                       currentUser.getId());
+                    currentUser.getId());
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+            return "redirect:/profil"; 
         } catch (Exception e) {
             logger.error("Erreur lors de la modification de l'adresse email pour l'utilisateur ID: {}", 
                         currentUser.getId(), e);
             redirectAttributes.addFlashAttribute("errorMessage", "Erreur lors de la modification de l'adresse email");
+            return "redirect:/profil"; 
         }
-
-        return "redirect:/profil";
     }
-
 }

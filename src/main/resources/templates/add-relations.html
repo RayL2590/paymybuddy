@@ -3,6 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="_csrf" th:content="${_csrf.token}"/>
+  <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
   <title>Ajouter une relation</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -136,6 +138,10 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
+  const token = document.querySelector('meta[name="_csrf"]').content;
+  const header = document.querySelector('meta[name="_csrf_header"]').content;
+
+
 document.addEventListener('DOMContentLoaded', function() {
     const searchInput = document.getElementById('searchInput');
     const searchResults = document.getElementById('searchResults');
@@ -200,42 +206,42 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Gestion de la soumission du formulaire avec AJAX
     document.getElementById('addRelationForm').addEventListener('submit', function(event) {
-        event.preventDefault();
-        
-        const email = searchInput.value.trim();
-        if (!email) {
-            showMessage('Veuillez saisir un email ou nom d utilisateur', 'error');
-            return;
+    event.preventDefault();
+    
+    const email = searchInput.value.trim();
+    if (!email) {
+        showMessage('Veuillez saisir un email ou nom d utilisateur', 'error');
+        return;
+    }
+    
+    const formData = new FormData();
+    formData.append('email', email);
+    formData.append(token.split('=')[0], token);
+    fetch('/api/relations', {
+        method: 'POST',
+        headers: {
+            [header]: token  
+        },
+        body: formData
+    })
+    .then(response => {
+        if (response.ok) {
+            return response.text();
+        } else {
+            return response.text().then(text => { throw new Error(text); });
         }
-        
-        // Créer les données du formulaire
-        const formData = new FormData();
-        formData.append('email', email);
-        
-        // Envoyer la requête vers l'endpoint REST
-        fetch('/api/relations', {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => {
-            if (response.ok) {
-                return response.text();
-            } else {
-                return response.text().then(text => { throw new Error(text); });
-            }
-        })
-        .then(message => {
-            showMessage(message, 'success');
-            searchInput.value = '';
-            // Rediriger vers la page des transactions après un délai
-            setTimeout(() => {
-                window.location.href = '/user-transactions/' + /*[[${user.id}]]*/ '1';
-            }, 1500);
-        })
-        .catch(error => {
-            showMessage(error.message || 'Une erreur s est produite', 'error');
-        });
+    })
+    .then(message => {
+        showMessage(message, 'success');
+        searchInput.value = '';
+        setTimeout(() => {
+            window.location.href = '/user-transactions/' + /*[[${user.id}]]*/ '1';
+        }, 1500);
+    })
+    .catch(error => {
+        showMessage(error.message || 'Une erreur s est produite', 'error');
     });
+});
     
     // Fonction pour afficher les messages
     function showMessage(message, type) {

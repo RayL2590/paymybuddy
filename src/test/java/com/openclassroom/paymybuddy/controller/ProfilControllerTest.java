@@ -415,8 +415,8 @@ class ProfilControllerTest {
                         .param("newEmail", "new@example.com")
                         .param("currentPassword", "currentPassword"))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/profil"))
-                .andExpect(flash().attribute("successMessage", "Adresse email modifiée avec succès"));
+                .andExpect(redirectedUrl("/login"))
+                .andExpect(flash().attribute("successMessage", "Email modifié avec succès. Veuillez vous reconnecter avec votre nouvel email."));
 
         verify(authService).getCurrentUser();
         verify(passwordEncoder).matches("currentPassword", mockUser.getPassword());

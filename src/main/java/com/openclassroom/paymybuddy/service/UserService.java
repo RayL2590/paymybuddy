@@ -5,7 +5,9 @@ import com.openclassroom.paymybuddy.model.User;
 import com.openclassroom.paymybuddy.model.UserConnection;
 import com.openclassroom.paymybuddy.repository.UserConnectionRepository;
 import com.openclassroom.paymybuddy.repository.UserRepository;
+import org.springframework.transaction.annotation.Transactional;
 import jakarta.persistence.EntityNotFoundException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -14,6 +16,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
+import java.util.regex.Pattern;
 
 /**
  * Service pour gérer les utilisateurs et leurs connexions.
@@ -40,6 +43,13 @@ public class UserService {
      * Encodeur pour gérer les mots de passe des utilisateurs.
      */
     private final PasswordEncoder passwordEncoder;
+
+    /**
+     * Pattern pour détecter si un identifiant ressemble à un email.
+     */
+    private static final Pattern EMAIL_PATTERN = Pattern.compile(
+        "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"
+    );
 
     /**
      * Constructeur pour initialiser les repositories nécessaires.
@@ -157,22 +167,32 @@ public class UserService {
      */
     public Optional<User> findUserByEmailOrUsername(String identifier) {
         logger.info("Recherche d'utilisateur avec l'identifiant: {}", identifier);
+        if (identifier == null || identifier.trim().isEmpty()) {
+            return Optional.empty();
+        }
+        
+        String cleanIdentifier = identifier.trim();
         
         // Essayer d'abord par email
-        Optional<User> userByEmail = userRepository.findByEmail(identifier);
-        if (userByEmail.isPresent()) {
-            logger.info("Utilisateur trouvé par email: {}", identifier);
+        if (EMAIL_PATTERN.matcher(cleanIdentifier).matches()) {
+            logger.debug("Identifiant détecté comme email: {}", cleanIdentifier);
+            Optional<User> userByEmail = userRepository.findByEmail(cleanIdentifier);
+            if (userByEmail.isPresent()) {
+                logger.info("Utilisateur trouvé par email: {}", cleanIdentifier);
+            } else {
+                logger.info("Aucun utilisateur trouvé avec l'email: {}", cleanIdentifier);
+            }
             return userByEmail;
         }
         
         // Ensuite par nom d'utilisateur
-        Optional<User> userByUsername = userRepository.findByUsername(identifier);
+         logger.debug("Identifiant détecté comme nom d'utilisateur: {}", cleanIdentifier);
+        Optional<User> userByUsername = userRepository.findByUsername(cleanIdentifier);
         if (userByUsername.isPresent()) {
-            logger.info("Utilisateur trouvé par nom d'utilisateur: {}", identifier);
+            logger.info("Utilisateur trouvé par nom d'utilisateur: {}", cleanIdentifier);
         } else {
-            logger.info("Aucun utilisateur trouvé avec l'identifiant: {}", identifier);
+            logger.info("Aucun utilisateur trouvé avec le nom d'utilisateur: {}", cleanIdentifier);
         }
-        
         return userByUsername;
     }
     
@@ -182,9 +202,8 @@ public class UserService {
      * @param userId ID de l'utilisateur courant
      * @param identifier Identifiant de l'utilisateur cible
      */
+    @Transactional
     public void addUserConnectionByIdentifier(Long userId, String identifier) {
-        logger.info("Tentative d'ajout d'une connexion - UserId: {}, Identifiant: {}", userId, identifier);
-
         User currentUser = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("Utilisateur courant non trouvé"));
 
@@ -195,16 +214,21 @@ public class UserService {
             throw new IllegalArgumentException("Vous ne pouvez pas vous ajouter vous-même");
         }
 
-        // Vérifier si la connexion existe déjà
-        boolean connectionExists = userConnectionRepository.existsByUserAndConnection(currentUser, targetUser);
+        //Vérifier si une connexion existe déjà (dans les deux sens)
+        boolean connectionExists = userConnectionRepository.existsByUserAndConnection(currentUser, targetUser) ||
+                                 userConnectionRepository.existsByUserAndConnection(targetUser, currentUser);
+        
         if (connectionExists) {
             throw new IllegalArgumentException("Cette connexion existe déjà");
         }
 
-        UserConnection connection = new UserConnection(currentUser, targetUser);
-        userConnectionRepository.save(connection);
+        // Créer DEUX connexions (bidirectionnelle)
+        UserConnection connection1 = new UserConnection(currentUser, targetUser);
+        UserConnection connection2 = new UserConnection(targetUser, currentUser);
+        userConnectionRepository.save(connection1);
+        userConnectionRepository.save(connection2);
 
-        logger.info("Connexion ajoutée avec succès entre {} et {}", userId, targetUser.getId());
+        logger.info("Connexion bidirectionnelle créée entre {} et {}", userId, targetUser.getId());
     }
     
     /**

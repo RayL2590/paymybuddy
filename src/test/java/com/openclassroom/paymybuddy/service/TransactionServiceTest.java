@@ -142,7 +142,6 @@ class TransactionServiceTest {
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("Vous ne pouvez pas effectuer un transfert vers vous-même");
 
-        // Corriger : attendre 2 appels au lieu de 1
         verify(userRepository, times(2)).findById(1L);
         verify(transactionRepository, never()).save(any(Transaction.class));
     }
